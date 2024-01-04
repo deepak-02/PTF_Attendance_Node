@@ -13,6 +13,9 @@ router.get('/getAll',controller.listLeaveRequests);
 // API to get all the leave requests by status
 router.get('/getByStatus/:requestStatus',controller.listLeaveRequestsByStatus);
 
+// API to get the leave requests of a user by type
+router.post('/getByType',controller.listUserLeaveRequestsByType);
+
 // API to get requests of a single user by email and filter by status
 router.post('/getByUser',controller.listUserLeaveRequests);
 

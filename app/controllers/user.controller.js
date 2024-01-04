@@ -50,7 +50,7 @@ exports.uploadImage = async (req, res) => {
             await newImage.save();
         }
 
-        res.status(201).json({ message: 'Image uploaded successfully' });
+        res.status(200).json({ message: 'Image uploaded successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -333,7 +333,7 @@ exports.resetPassword = async (req, res) => {
         await user.save();
 
         // Return a success message
-       return  res.json({ message: 'Password reset successfully' });
+        return res.status(200).json({message:"Password resetted successfully"});
     } catch (err) {
         console.error(err);
        return  res.status(500).json({ message: err.message });

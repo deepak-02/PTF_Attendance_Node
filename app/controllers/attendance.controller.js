@@ -245,12 +245,13 @@ exports.getLatestAttendanceStatus = async (req, res) => {
         const { email } = req.params; // Assuming the email is passed as a parameter
 
         // Get the current date in the format "12/2/2023"
-        const currentDate = new Date().toLocaleDateString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric',
-        });
-
+        // const currentDate = new Date().toLocaleDateString('en-US', {
+        //     month: '2-digit',
+        //     day: '2-digit',
+        //     year: 'numeric',
+        // });
+        const currentDate = new Date().toLocaleDateString('en-US');
+        
         // Find the latest attendance entry for the specified user and today's date
         const latestAttendanceEntry = await Attendance.findOne({
             email,

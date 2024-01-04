@@ -43,8 +43,10 @@ app.use('/api/leave', leaveRoute);
 
 
 // Set up the MongoDB connection
+//mongodb+srv://testUser123:testUser123@cluster0.z047vli.mongodb.net/?authMechanism=DEFAULT
+//mongodb://0.0.0.0:27017/Attendance
 db.mongoose
-    .connect(`mongodb://0.0.0.0:27017/Attendance`, {
+    .connect(`mongodb+srv://testUser123:testUser123@cluster0.z047vli.mongodb.net/?authMechanism=DEFAULT`, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })

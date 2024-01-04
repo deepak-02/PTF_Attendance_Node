@@ -7,7 +7,7 @@ const nodemailer = require('nodemailer');
 // API to request leave
 exports.requestLeave = async (req, res) => {
     try {
-        const { email, requestDate, reason } = req.body;
+        const { email, requestDate, toDate ,reason ,type} = req.body;
 
         var name = '';
 
@@ -32,7 +32,9 @@ exports.requestLeave = async (req, res) => {
         const newLeaveRequest = new Leave({
             leaveId,
             email,
+            type,
             requestDate,
+            toDate,
             reason,
             requestStatus: 'requested',
             requestedOn: new Date().toLocaleString('en-US', { 
@@ -132,7 +134,13 @@ exports.requestLeave = async (req, res) => {
       <strong>Reason for Leave:</strong> ${reason}
     </div>
     <div class="content">
+      <strong>Leave Type:</strong> ${type}
+    </div>
+    <div class="content">
       <strong>Date Requested:</strong> ${requestDate}
+    </div>
+    <div class="content">
+    <strong>Leave Until:</strong> ${toDate}
     </div>
 
     <div class="footer">
@@ -201,6 +209,8 @@ exports.listLeaveRequests = async (req, res) => {
               leaveId: leaveRequest.leaveId,
               email: leaveRequest.email,
               requestDate: leaveRequest.requestDate,
+              toDate: leaveRequest.toDate,
+              type: leaveRequest.type,
               reason: leaveRequest.reason,
               requestStatus: leaveRequest.requestStatus,
               requestedOn: leaveRequest.requestedOn,
@@ -243,8 +253,8 @@ exports.listLeaveRequestsByStatus = async (req, res) => {
 
       // Convert the date strings to Date objects for proper sorting
       const sortedLeaveRequests = leaveRequests.sort((a, b) => {
-          const dateA = new Date(a.requestDate);
-          const dateB = new Date(b.requestDate);
+          const dateA = new Date(a.requestedOn);
+          const dateB = new Date(b.requestedOn);
 
           return dateB - dateA;
       });
@@ -260,6 +270,8 @@ exports.listLeaveRequestsByStatus = async (req, res) => {
               leaveId: leaveRequest.leaveId,
               email: leaveRequest.email,
               requestDate: leaveRequest.requestDate,
+              toDate: leaveRequest.toDate,
+              type: leaveRequest.type,
               reason: leaveRequest.reason,
               requestStatus: leaveRequest.requestStatus,
               requestedOn: leaveRequest.requestedOn,
@@ -322,6 +334,8 @@ exports.listUserLeaveRequests = async (req, res) => {
               leaveId: leaveRequest.leaveId,
               email: leaveRequest.email,
               requestDate: leaveRequest.requestDate,
+              toDate: leaveRequest.toDate,
+              type: leaveRequest.type,
               reason: leaveRequest.reason,
               requestStatus: leaveRequest.requestStatus,
               requestedOn: leaveRequest.requestedOn,
@@ -339,6 +353,64 @@ exports.listUserLeaveRequests = async (req, res) => {
   }
 };
 
+// API to list leave requests of a single user by type
+exports.listUserLeaveRequestsByType = async (req, res) => {
+  try {
+      const { email, type } = req.body;
+
+      let leaveRequests;
+
+      if (type !== 'all') {
+          const allowedTypeValues = ['casual', 'sick'];
+          if (!allowedTypeValues.includes(type)) {
+              return res.status(400).json({ message: 'Invalid type' });
+          }
+          leaveRequests = await Leave.find({ email, type: type });
+      } else {
+          leaveRequests = await Leave.find({ email });
+      }
+
+      if (leaveRequests.length === 0) {
+          return res.status(404).json({ message: 'No leave requests found' });
+      }
+
+      // Convert the date strings to Date objects for proper sorting
+      const sortedLeaveRequests = leaveRequests.sort((a, b) => {
+          const dateA = new Date(a.requestDate);
+          const dateB = new Date(b.requestDate);
+
+          return dateB - dateA;
+      });
+
+      // Create an array to store the formatted results
+      const formattedLeaveRequests = [];
+
+      // Iterate through each leave request and fetch user details
+      for (const leaveRequest of sortedLeaveRequests) {
+          const user = await User.findOne({ email: leaveRequest.email });
+
+          const formattedRequest = {
+              leaveId: leaveRequest.leaveId,
+              email: leaveRequest.email,
+              requestDate: leaveRequest.requestDate,
+              toDate: leaveRequest.toDate,
+              type: leaveRequest.type,
+              reason: leaveRequest.reason,
+              requestStatus: leaveRequest.requestStatus,
+              requestedOn: leaveRequest.requestedOn,
+              approvedOrRejectedOn: leaveRequest.approvedOrRejectedOn,
+              name: user ? user.name : '',
+          };
+
+          formattedLeaveRequests.push(formattedRequest);
+      }
+
+      res.status(200).json({ leaveRequests: formattedLeaveRequests });
+  } catch (error) {
+      console.error('Error listing leave requests:', error);
+      res.status(500).json({ message: 'Failed to list leave requests' });
+  }
+};
 
 
 // API to approve or decline leave request
@@ -472,7 +544,13 @@ exports.changeLeaveStatus = async (req, res) => {
       <strong>Reason for Leave:</strong> ${leaveRequest.reason}
     </div>
     <div class="content">
+      <strong>Leave Type:</strong> ${leaveRequest.type}
+    </div>
+    <div class="content">
       <strong>Date Requested:</strong> ${leaveRequest.requestDate}
+    </div>
+    <div class="content">
+      <strong>Leave Until:</strong> ${leaveRequest.toDate}
     </div>
     <div class="content">
       <strong>Approved On:</strong> ${leaveRequest.approvedOrRejectedOn}
@@ -584,7 +662,13 @@ body {
       <strong>Reason for Leave:</strong> ${leaveRequest.reason}
     </div>
     <div class="content">
+      <strong>Leave Type:</strong> ${leaveRequest.type}
+    </div>
+    <div class="content">
       <strong>Date Requested:</strong> ${leaveRequest.requestDate}
+    </div>
+    <div class="content">
+      <strong>Leave Until:</strong> ${leaveRequest.toDate}
     </div>
 
     <div class="footer">

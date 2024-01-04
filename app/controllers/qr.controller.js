@@ -66,9 +66,9 @@ exports.verify = async (req, res) => {
                 //     return res.status(400).json({ message: 'You are already out' });
                 // } else 
                 if (lastScan === 'in' && attendanceEntry.lastScan === 'in') {
-                    return res.status(400).json({ message: 'You are already in' });
+                    return res.status(202).json({ message: 'You are already in' });
                 }else if(attendanceEntry.lastScan === 'out'){
-                    return res.status(400).json({ message: 'Attendance already marked for the day' });
+                    return res.status(202).json({ message: 'Attendance already marked for the day' });
                 } else {
                     // Update the lastScan field based on the current scan
                     attendanceEntry.lastScan = lastScan;
@@ -105,7 +105,7 @@ exports.verify = async (req, res) => {
             } else {
                 // If it's the first entry for the day, mark the 'in' time and set lastScan as 'in'
                 if (lastScan === 'out') {
-                    return res.status(400).json({ message: 'Invalid operation. First entry must be IN.' });
+                    return res.status(202).json({ message: 'Invalid operation. First entry must be IN.' });
                 }
                 console.log('bbbbbbbbbbbbb');
 
