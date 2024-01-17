@@ -175,21 +175,27 @@ exports.requestLeave = async (req, res) => {
         };
 
         try {
-
           const notification = await Notification.findOne({ 'email': admins[i] });
-          if(notification){
+          if (notification) {
             console.log(notification);
-          console.log(notification.email);
-          console.log(notification.token);
+            console.log(notification.email);
+            console.log(notification.token);
+             const deviceToken = notification.token; // Replace with the actual device token
+            if (deviceToken) {
+             
+              const notificationTitle = 'Request';
+              const notificationBody = `You have a new leave request from ${name}`;
 
-          const deviceToken = notification.token; // Replace with the actual device token
-          const notificationTitle = 'Request';
-          const notificationBody = `You have a new leave request from ${name}`;
+              sendPushNotification(deviceToken, notificationTitle, notificationBody, "admin");
+            }else {
+              console.error('Device token not available for user:', admins[i]);
+            }
 
-          sendPushNotification(deviceToken, notificationTitle, notificationBody, "admin");
+          }else {
+            console.error('Notification not found for user:', admins[i]);
           }
 
-          
+
 
           // await the sendMail function to ensure it completes before moving to the next iteration
           // await transporter.sendMail(mailOptions);
@@ -971,8 +977,13 @@ async function sendPushNotification(deviceToken, title, body, data) {
   };
 
   try {
-    const response = await admin.messaging().send(message);
+    if(deviceToken){
+      const response = await admin.messaging().send(message);
     console.log('Successfully sent message:', response);
+    }else{
+      console.log("No token available");
+    }
+    
   } catch (error) {
     console.error('Error sending message:', error);
   }
