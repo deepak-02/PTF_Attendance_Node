@@ -92,9 +92,9 @@ exports.verify = async (req, res) => {
                     console.log('currentTimeString:', currentTimeString);
     
     
-                    const morningStart = 8 * 60 + 40;
+                    const morningStart = 9 * 60 + 40;
                     const morningEnd = 13 * 60;
-                    const afternoonStart = 13 * 60;
+                    const afternoonStart = 13 * 60 + 40;
                     const afternoonEnd = 23 * 60;
                     
                 console.log('Current Minutes:', currentMinutes);
@@ -143,9 +143,9 @@ exports.verify = async (req, res) => {
                 console.log('currentTimeString:', currentTimeString);
 
 
-                const morningStart = 8 * 60 + 40;
+                const morningStart = 9 * 60 + 40;
                 const morningEnd = 13 * 60;
-                const afternoonStart = 13 * 60;
+                const afternoonStart = 13 * 60 + 40;
                 const afternoonEnd = 23 * 60;
                 
                 console.log('Current Minutes:', currentMinutes);

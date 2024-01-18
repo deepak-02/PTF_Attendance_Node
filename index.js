@@ -49,9 +49,10 @@ app.use('/api/notification', notificationRoute);
 
 // Set up the MongoDB connection
 //mongodb+srv://testUser123:testUser123@cluster0.z047vli.mongodb.net/?authMechanism=DEFAULT
+//mongodb+srv://ptfattendance:attendance@cluster0.7nng2.mongodb.net/?retryWrites=true&w=majority
 //mongodb://0.0.0.0:27017/Attendance
 db.mongoose
-    .connect(`mongodb+srv://testUser123:testUser123@cluster0.z047vli.mongodb.net/?authMechanism=DEFAULT`, {
+    .connect(`mongodb+srv://ptfattendance:attendance@cluster0.7nng2.mongodb.net/?retryWrites=true&w=majority`, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })
