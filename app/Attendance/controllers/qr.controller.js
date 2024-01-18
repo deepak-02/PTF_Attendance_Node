@@ -93,7 +93,7 @@ exports.verify = async (req, res) => {
     
     
                     const morningStart = 9 * 60 + 40;
-                    const morningEnd = 13 * 60;
+                    const morningEnd = 12 * 60;
                     const afternoonStart = 13 * 60 + 40;
                     const afternoonEnd = 23 * 60;
                     
@@ -144,7 +144,7 @@ exports.verify = async (req, res) => {
 
 
                 const morningStart = 9 * 60 + 40;
-                const morningEnd = 13 * 60;
+                const morningEnd = 12 * 60;
                 const afternoonStart = 13 * 60 + 40;
                 const afternoonEnd = 23 * 60;
                 

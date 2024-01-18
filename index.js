@@ -52,7 +52,7 @@ app.use('/api/notification', notificationRoute);
 //mongodb+srv://ptfattendance:attendance@cluster0.7nng2.mongodb.net/?retryWrites=true&w=majority
 //mongodb://0.0.0.0:27017/Attendance
 db.mongoose
-    .connect(`mongodb+srv://ptfattendance:attendance@cluster0.7nng2.mongodb.net/?retryWrites=true&w=majority`, {
+    .connect(`mongodb+srv://testUser123:testUser123@cluster0.z047vli.mongodb.net/?authMechanism=DEFAULT`, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })
