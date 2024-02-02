@@ -12,6 +12,7 @@ db.image = require("./image.schema");
 db.otp = require("./otp.schema");
 db.leave = require("./leave.schema");
 db.notification = require("./notification.schema");
+db.late = require("./late.schema");
 
 
 

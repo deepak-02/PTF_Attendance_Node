@@ -9,9 +9,19 @@ const userRoute = require("./app/Attendance/routes/user.routes");
 const attendanceRoute = require("./app/Attendance/routes/attendance.routes");
 const leaveRoute = require("./app/Attendance/routes/leave.routes");
 const notificationRoute = require("./app/Attendance/routes/notification.routes");
+const lateRoute = require("./app/Attendance/routes/late.routes");
 
 
 const Otp = require('./app/Attendance/models/otp.schema');
+
+const admin = require('firebase-admin');
+const serviceAccount = require('./app/Attendance/attendance-dd5f2-firebase-adminsdk-eg6lr-27f3554625.json');
+
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 
 var corsOptions = {
     origin: "*"
@@ -44,6 +54,7 @@ app.use('/api/user', userRoute);
 app.use('/api/attendance', attendanceRoute);
 app.use('/api/leave', leaveRoute);
 app.use('/api/notification', notificationRoute);
+app.use('/api/late', lateRoute);
 
 
 

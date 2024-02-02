@@ -5,12 +5,12 @@ const Notification = db.notification;
 const nodemailer = require('nodemailer');
 
 const admin = require('firebase-admin');
-const serviceAccount = require('../attendance-dd5f2-firebase-adminsdk-eg6lr-27f3554625.json');
+// const serviceAccount = require('../attendance-dd5f2-firebase-adminsdk-eg6lr-27f3554625.json');
 
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+// });
 
 // API to request leave
 exports.requestLeave = async (req, res) => {
@@ -770,7 +770,7 @@ exports.changeLeaveStatus = async (req, res) => {
 
       //get token for user from the db and send notification
       const notification = await Notification.findOne({ 'email': email });
-      if (notification) {
+      if (notification.token) {
         const deviceToken = notification.token; // Replace with the actual device token
         const notificationTitle = 'Approved';
         const notificationBody = `Your leave request from ${leaveRequest.requestedOn} has been approved`;
@@ -900,10 +900,10 @@ body {
 
 
       const notification = await Notification.findOne({ 'email': email });
-      if (notification) {
+      if (notification.token) {
         const deviceToken = notification.token; // Replace with the actual device token
         const notificationTitle = 'Rejected';
-        const notificationBody = `Your leave request from ${leaveRequest.requestedOn} has been rejectes`;
+        const notificationBody = `Your leave request from ${leaveRequest.requestedOn} has been rejected`;
 
         sendPushNotification(deviceToken, notificationTitle, notificationBody, "user");
       }

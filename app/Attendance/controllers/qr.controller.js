@@ -2,6 +2,7 @@ const db = require("../models");
 const Qr = db.qr;
 const Attendance = db.attendance;
 const User = db.user;
+const Late = db.late;
 
 var resp = 0;
 
@@ -86,25 +87,41 @@ exports.verify = async (req, res) => {
                     const currentHours = parseInt(currentTimeString.split(":")[0], 10);
                     const currentMinute = parseInt(currentTimeString.split(":")[1], 10);
                     const currentMinutes = currentHours * 60 + currentMinute;
-    
+
                     console.log('Current Hours:', currentHours);
                     console.log('Current Minute:', currentMinute);
                     console.log('currentTimeString:', currentTimeString);
-    
-    
+
+
                     const morningStart = 9 * 60 + 40;
                     const morningEnd = 12 * 60;
                     const afternoonStart = 13 * 60 + 40;
                     const afternoonEnd = 23 * 60;
-                    
-                console.log('Current Minutes:', currentMinutes);
+
+                    console.log('Current Minutes:', currentMinutes);
 
                     if (
                         (currentMinutes >= morningStart && currentMinutes <= morningEnd) ||
                         (currentMinutes >= afternoonStart && currentMinutes <= afternoonEnd)
                     ) {
-                        attendanceEntry.in.late = true;
-                        console.log('Marked as late');
+                        const late = await Late.findOne({ email });
+                        console.log(currentDate);
+                        console.log(late.on);
+                        const formattedDate = new Date(late.on).toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata' });
+                        console.log(new Date(currentDate).toISOString().split('T')[0] === late.on.toISOString().split('T')[0]);
+
+                        if (!late) {
+                            attendanceEntry.in.late = true;
+                            console.log('Marked as late');
+                        } else{
+                            if(late.status === "approved" && new Date(currentDate).toISOString().split('T')[0] === late.on.toISOString().split('T')[0]){
+                                console.log("Late request found");
+                           } else{
+                               attendanceEntry.in.late = true;
+                               console.log("Late marked");
+                           }
+                        }
+
                     }
 
                     await attendanceEntry.save();
@@ -147,12 +164,30 @@ exports.verify = async (req, res) => {
                 const morningEnd = 12 * 60;
                 const afternoonStart = 13 * 60 + 40;
                 const afternoonEnd = 23 * 60;
-                
+
                 console.log('Current Minutes:', currentMinutes);
-                
+
                 if ((currentMinutes >= morningStart && currentMinutes <= morningEnd) ||
                     (currentMinutes >= afternoonStart && currentMinutes <= afternoonEnd)) {
-                    attendanceEntry.in.late = true;
+                        
+                        const late = await Late.findOne({ email });
+                        console.log(currentDate);
+                        console.log(late.on);
+                        console.log(new Date(currentDate).toISOString().split('T')[0] === late.on.toISOString().split('T')[0]);
+
+                        if(!late){
+                            attendanceEntry.in.late = true;
+                            conslole.log("Late marked");
+                        } else{
+                            if(late.status === "approved" && new Date(currentDate).toISOString().split('T')[0] === late.on.toISOString().split('T')[0]){
+                                 console.log("Late request found");
+                            } else{
+                                attendanceEntry.in.late = true;
+                                console.log("Late marked");
+                            }
+                           
+                        }
+                    
                 }
 
                 await attendanceEntry.save();
