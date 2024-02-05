@@ -28,7 +28,7 @@ exports.requestLate = async (req, res) => {
 
     name = user.name;
 
-    const lateId = await generateLateId();
+    
 
     // Check if the late request already exists for the specified date
     const existingLateRequest = await Late.findOne({ email, on });
@@ -37,7 +37,175 @@ exports.requestLate = async (req, res) => {
       return res.status(400).json({ message: 'Request already exists for the specified date' });
     }
 
+const lateId = await generateLateId();
+
+if(requestMethod == 'call'){
     // Create a new late request
+    const newLateRequest = new Late({
+      lateId,
+      email,
+      willLate: true,
+      on,
+      reason,
+      status: 'approved',
+      requestedOn: new Date().toLocaleString('en-US', {
+        timeZone: 'Asia/Kolkata',
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }),
+      requestMethod
+    });
+
+    // Save the new Late request to the database
+    await newLateRequest.save();
+
+
+
+      // create reusable transporter object using the default SMTP transport
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: 'ptfattendanceapp@gmail.com',
+          pass: 'vkxhfuwbaygppaim',
+        },
+      });
+
+      // setup email data with HTML body
+      const mailOptions = {
+        from: 'ptfattendanceapp@gmail.com',
+        to: email,
+        subject: 'Late Request Status',
+        html: `
+      <!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Late Request Approved</title>
+  <style>
+    body {
+      background-color: #f5f5f5;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo img {
+      max-width: 150px;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .content {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      color: #808080;
+      margin-top: 20px;
+    }
+
+    .footer-text {
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="https://i.postimg.cc/s2PRL37q/attendance-logo.png" alt="PTF Logo">   
+    </div>
+    <div class="title">Late Approval - PTF Attendance App</div>
+    <div class="content">Dear <b>${user.name}</b>,</div>
+    <div class="content">Good news! Your late request from ${new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Kolkata',
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    })} has been approved for the following details:</div>
+    <div class="content">
+      <strong>Reason :</strong> ${reason}
+    </div>
+    <div class="content">
+      <strong>Date Requested:</strong> ${on}
+    </div>
+    <div class="content">
+      <strong>Status:</strong> Approved
+    </div>
+
+    <div class="footer">
+      <div class="footer-text">© PTF - 2022 Team</div>
+    </div>
+  </div>
+</body>
+</html>
+    `,
+      };
+
+      // send mail with defined transport object
+      transporter.sendMail(mailOptions, async (error, info) => {
+        if (error) {
+          console.log(error);
+          console.log(info);
+          // return res.status(500).json({ error: 'Error sending email' });
+        } else {
+          // console.log('OTP saved');
+          console.log(info);
+
+          // return res.status(200).json({ message: 'Email sent successfully' });
+        }
+      });
+
+
+      //get token for user from the db and send notification
+      const notification = await Notification.findOne({ 'email': email });
+      if (notification) {
+        const deviceToken = notification.token; // Replace with the actual device token
+        const notificationTitle = 'Approved';
+        const notificationBody = `Your late request from ${new Date().toLocaleString('en-US', {
+          timeZone: 'Asia/Kolkata',
+          month: '2-digit',
+          day: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })} has been approved`;
+
+        sendPushNotification(deviceToken, notificationTitle, notificationBody, 'lateUser');
+      }
+
+
+
+}else{
+      // Create a new late request
     const newLateRequest = new Late({
       lateId,
       email,
@@ -212,7 +380,7 @@ exports.requestLate = async (req, res) => {
         }
       }
     }
-
+}
 
     res.status(201).json({ message: 'Late request submitted successfully' });
   } catch (error) {
