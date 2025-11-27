@@ -1,7 +1,10 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const cron = require('node-cron');
 const axios = require('axios');
+const rateLimit = require('express-rate-limit');
+const config = require('./app/Attendance/config/config');
 const app = express();
 const authRoute = require("./app/Attendance/routes/auth.routes");
 const qrRoute = require("./app/Attendance/routes/qr.routes");
@@ -15,7 +18,7 @@ const lateRoute = require("./app/Attendance/routes/late.routes");
 const Otp = require('./app/Attendance/models/otp.schema');
 
 const admin = require('firebase-admin');
-const serviceAccount = require('./app/Attendance/attendance-dd5f2-firebase-adminsdk-eg6lr-27f3554625.json');
+const serviceAccount = require(config.firebase.serviceAccountPath);
 
 
 admin.initializeApp({
@@ -23,8 +26,20 @@ admin.initializeApp({
 });
 
 
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+
+app.use('/api/', limiter);
+
+// CORS Configuration
 var corsOptions = {
-    origin: "*"
+    origin: config.cors.origin,
+    credentials: true,
+    optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
@@ -56,14 +71,16 @@ app.use('/api/leave', leaveRoute);
 app.use('/api/notification', notificationRoute);
 app.use('/api/late', lateRoute);
 
+// Error handling middleware (must be last)
+const { errorHandler, notFoundHandler } = require('./app/Attendance/middleware/errorHandler');
+app.use(notFoundHandler);
+app.use(errorHandler);
+
 
 
 // Set up the MongoDB connection
-//mongodb+srv://testUser123:testUser123@cluster0.z047vli.mongodb.net/?authMechanism=DEFAULT
-//mongodb+srv://ptfattendance:attendance@cluster0.7nng2.mongodb.net/?retryWrites=true&w=majority
-//mongodb://0.0.0.0:27017/Attendance
 db.mongoose
-    .connect(`mongodb+srv://testUser123:testUser123@cluster0.z047vli.mongodb.net/?authMechanism=DEFAULT`, {
+    .connect(config.mongodb.uri, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })
@@ -78,9 +95,9 @@ db.mongoose
     });
 
 // Set the port and start the server
-const PORT = process.env.PORT || 8080;
+const PORT = config.server.port;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}.`);
+    console.log(`Server is running on port ${PORT} in ${config.server.env} mode.`);
 });
 
 

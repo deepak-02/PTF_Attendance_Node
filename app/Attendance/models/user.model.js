@@ -57,6 +57,12 @@ const userSchema = new mongoose.Schema(
     }
 );
 
+// Add indexes for better query performance
+userSchema.index({ email: 1 });
+userSchema.index({ userId: 1 });
+userSchema.index({ batch: 1 });
+userSchema.index({ role: 1 });
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

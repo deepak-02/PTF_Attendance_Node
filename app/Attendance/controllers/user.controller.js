@@ -1,9 +1,9 @@
 const db = require("../models");
-const nodemailer = require('nodemailer');
 const User = db.user;
 const Image = db.image;
 const Otp = db.otp;
 const bcrypt = require("bcrypt");
+const { sendPasswordResetOTP } = require('../utils/emailService');
 
 
 
@@ -160,116 +160,14 @@ exports.getOtp = async (req, res) => {
             otp: randomNumber.toString(),
         });
 
-    // create reusable transporter object using the default SMTP transport
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: 'ptfattendanceapp@gmail.com',
-            pass: 'vkxhfuwbaygppaim',
-        },
-    });
-
-    // setup email data with HTML body
-    const mailOptions = {
-        from: 'ptfattendanceapp@gmail.com',
-        to: email,
-        subject: 'Password Reset',
-        html: `
-      <!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>PTF Attendance App - Password Reset OTP</title>
-  <style>
-    body {
-      background-color: #f5f5f5;
-      font-family: Arial, sans-serif;
+    // Send OTP email
+    const emailResult = await sendPasswordResetOTP(email, randomNumber.toString());
+    
+    if (!emailResult.success) {
+        return res.status(500).json({ error: 'Error sending email' });
     }
 
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #ffffff;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .logo img {
-      max-width: 150px;
-    }
-
-    .title {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    .content {
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-
-    .otp {
-      text-align: center;
-      font-size: 48px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      color: #1e80ff;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 14px;
-      color: #808080;
-      margin-top: 20px;
-    }
-
-    .footer-text {
-      font-size: 12px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="logo">
-      <img src="https://i.postimg.cc/s2PRL37q/attendance-logo.png" alt="PTF Logo">   
-    </div>
-    <div class="title">PTF Attendance App - Password Reset OTP</div>
-    <div class="content">Dear user,</div>
-    <div class="content">You have requested to reset your password for the PTF Attendance App. Please use the following OTP to proceed:</div>
-    <div class="otp">${randomNumber}</div>
-    <div class="content">This OTP will expire in 5 minutes, so please make sure to use it within that time.</div>
-    <div class="footer">
-      If you did not request this password reset, please ignore this email.
-      <div class="footer-text">© PTF - 2022 Team</div>
-    </div>
-  </div>
-</body>
-</html>
-    `,
-    };
-
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, async (error, info) => {
-        if (error) {
-            console.log(error);
-            console.log(info);
-            return res.status(500).json({ error: 'Error sending email' });
-        } else {
-            console.log('OTP saved');
-            console.log(info);
-
-            return res.status(200).json({ message: 'Email sent successfully' });
-        }
-    });
+    return res.status(200).json({ message: 'Email sent successfully' });
     } catch (error) {
         console.error('Error generating OTP:', error);
         return res.status(500).json({ message: error.message });

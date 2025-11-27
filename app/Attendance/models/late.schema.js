@@ -21,6 +21,13 @@ const lateSchema = new mongoose.Schema(
 
 );
 
+// Add indexes for better query performance
+lateSchema.index({ email: 1 });
+lateSchema.index({ lateId: 1 });
+lateSchema.index({ on: 1 });
+lateSchema.index({ status: 1 });
+lateSchema.index({ email: 1, on: 1 }); // Compound index for date queries
+
 const Late = mongoose.model("late", lateSchema);
 
 module.exports = Late;

@@ -3,8 +3,37 @@ const Qr = db.qr;
 const Attendance = db.attendance;
 const User = db.user;
 const Late = db.late;
+const config = require('../config/config');
 
 var resp = 0;
+
+/**
+ * Check if current time falls within late arrival windows
+ * @returns {Number} - Current time in minutes from midnight
+ */
+function getCurrentMinutes() {
+    const currentTimeString = new Date().toLocaleTimeString('en-US', { 
+        timeZone: 'Asia/Kolkata', 
+        hour12: false 
+    });
+    const currentHours = parseInt(currentTimeString.split(":")[0], 10);
+    const currentMinute = parseInt(currentTimeString.split(":")[1], 10);
+    return currentHours * 60 + currentMinute;
+}
+
+/**
+ * Check if current time is within late arrival windows
+ * @returns {Boolean} - True if time is within late windows
+ */
+function isLateTime() {
+    const currentMinutes = getCurrentMinutes();
+    return (
+        (currentMinutes >= config.attendance.lateMorningStart && 
+         currentMinutes <= config.attendance.lateMorningEnd) ||
+        (currentMinutes >= config.attendance.lateAfternoonStart && 
+         currentMinutes <= config.attendance.lateAfternoonEnd)
+    );
+}
 
 // API to generate qr
 exports.generate = async (req, res) => {
@@ -81,47 +110,25 @@ exports.verify = async (req, res) => {
                         };
                     }
 
-                    // const currentTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata' });
-                    // const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
-                    const currentTimeString = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false, });
-                    const currentHours = parseInt(currentTimeString.split(":")[0], 10);
-                    const currentMinute = parseInt(currentTimeString.split(":")[1], 10);
-                    const currentMinutes = currentHours * 60 + currentMinute;
-
-                    console.log('Current Hours:', currentHours);
-                    console.log('Current Minute:', currentMinute);
-                    console.log('currentTimeString:', currentTimeString);
-
-
-                    const morningStart = 9 * 60 + 40;
-                    const morningEnd = 12 * 60;
-                    const afternoonStart = 13 * 60 + 40;
-                    const afternoonEnd = 23 * 60;
-
-                    console.log('Current Minutes:', currentMinutes);
-
-                    if (
-                        (currentMinutes >= morningStart && currentMinutes <= morningEnd) ||
-                        (currentMinutes >= afternoonStart && currentMinutes <= afternoonEnd)
-                    ) {
+                    // Check if time is within late windows
+                    if (isLateTime()) {
                         const late = await Late.findOne({ email });
-                        console.log(currentDate);
-                        console.log(late.on);
-                        const formattedDate = new Date(late.on).toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata' });
-                        console.log(new Date(currentDate).toISOString().split('T')[0] === late.on.toISOString().split('T')[0]);
-
+                        
                         if (!late) {
                             attendanceEntry.in.late = true;
-                            console.log('Marked as late');
-                        } else{
-                            if(late.status === "approved" && new Date(currentDate).toISOString().split('T')[0] === late.on.toISOString().split('T')[0]){
-                                console.log("Late request found");
-                           } else{
-                               attendanceEntry.in.late = true;
-                               console.log("Late marked");
-                           }
+                            console.log('Marked as late - no late request found');
+                        } else {
+                            // Check if approved late request exists for current date
+                            const lateDate = new Date(late.on).toISOString().split('T')[0];
+                            const currentDateISO = new Date(currentDate).toISOString().split('T')[0];
+                            
+                            if (late.status === "approved" && lateDate === currentDateISO) {
+                                console.log("Approved late request found - not marking as late");
+                            } else {
+                                attendanceEntry.in.late = true;
+                                console.log("Marked as late - no approved request for this date");
+                            }
                         }
-
                     }
 
                     await attendanceEntry.save();
@@ -150,44 +157,25 @@ exports.verify = async (req, res) => {
                 });
 
 
-                const currentTimeString = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false, });
-                const currentHours = parseInt(currentTimeString.split(":")[0], 10);
-                const currentMinute = parseInt(currentTimeString.split(":")[1], 10);
-                const currentMinutes = currentHours * 60 + currentMinute;
-
-                console.log('Current Hours:', currentHours);
-                console.log('Current Minute:', currentMinute);
-                console.log('currentTimeString:', currentTimeString);
-
-
-                const morningStart = 9 * 60 + 40;
-                const morningEnd = 12 * 60;
-                const afternoonStart = 13 * 60 + 40;
-                const afternoonEnd = 23 * 60;
-
-                console.log('Current Minutes:', currentMinutes);
-
-                if ((currentMinutes >= morningStart && currentMinutes <= morningEnd) ||
-                    (currentMinutes >= afternoonStart && currentMinutes <= afternoonEnd)) {
-                        
-                        const late = await Late.findOne({ email });
-                        console.log(currentDate);
-                        console.log(late.on);
-                        console.log(new Date(currentDate).toISOString().split('T')[0] === late.on.toISOString().split('T')[0]);
-
-                        if(!late){
-                            attendanceEntry.in.late = true;
-                            conslole.log("Late marked");
-                        } else{
-                            if(late.status === "approved" && new Date(currentDate).toISOString().split('T')[0] === late.on.toISOString().split('T')[0]){
-                                 console.log("Late request found");
-                            } else{
-                                attendanceEntry.in.late = true;
-                                console.log("Late marked");
-                            }
-                           
-                        }
+                // Check if time is within late windows
+                if (isLateTime()) {
+                    const late = await Late.findOne({ email });
                     
+                    if (!late) {
+                        attendanceEntry.in.late = true;
+                        console.log("Marked as late - no late request found");
+                    } else {
+                        // Check if approved late request exists for current date
+                        const lateDate = new Date(late.on).toISOString().split('T')[0];
+                        const currentDateISO = new Date(currentDate).toISOString().split('T')[0];
+                        
+                        if (late.status === "approved" && lateDate === currentDateISO) {
+                            console.log("Approved late request found - not marking as late");
+                        } else {
+                            attendanceEntry.in.late = true;
+                            console.log("Marked as late - no approved request for this date");
+                        }
+                    }
                 }
 
                 await attendanceEntry.save();

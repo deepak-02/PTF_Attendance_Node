@@ -3,8 +3,8 @@ const User = db.user;
 const Image = db.image;
 const Late = db.late;
 const bcrypt = require("bcrypt");
-const nodemailer = require('nodemailer');
 const axios = require('axios');
+const { sendWelcomeEmail, sendAccountDeletionEmail } = require('../utils/emailService');
 
 
 // API for user registration
@@ -45,111 +45,9 @@ exports.register = async (req, res) => {
 
     await newUser.save();
 
-
-    // Send account created message
-
-    // create reusable transporter object using the default SMTP transport
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'ptfattendanceapp@gmail.com',
-        pass: 'vkxhfuwbaygppaim',
-      },
-    });
-
-    // setup email data with HTML body
-    const mailOptions = {
-      from: 'ptfattendanceapp@gmail.com',
-      to: email,
-      subject: 'Welcome to PTF Attendance',
-      html: `
-      <!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Account Created</title>
-  <style>
-    body {
-      background-color: #f5f5f5;
-      font-family: Arial, sans-serif;
-    }
-
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #ffffff;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .logo img {
-      max-width: 150px;
-    }
-
-    .title {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    .content {
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 14px;
-      color: #808080;
-      margin-top: 20px;
-    }
-
-    .footer-text {
-      font-size: 12px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="logo">
-      <img src="https://i.postimg.cc/s2PRL37q/attendance-logo.png" alt="PTF Logo">   
-    </div>
-    <div class="title">Welcome to PTF Attendance App</div>
-    <div class="content">Dear <b>${name}</b>,</div>
-    <div class="content">Thank you for creating an account with the PTF Attendance App. We're excited to have you on board!</div>
-    <div class="content">With our app, you can easily manage and track your attendance. If you have any questions or need assistance, feel free to reach out to our support team.</div>
-
-    <div class="footer">
-      Enjoy using PTF Attendance App!
-      <div class="footer-text">© PTF - 2022 Team</div>
-    </div>
-  </div>
-</body>
-
-</html>
-    `,
-    };
-
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, async (error, info) => {
-      if (error) {
-        console.log(error);
-        console.log(info);
-        // return res.status(500).json({ error: 'Error sending email' });
-      } else {
-        // console.log('OTP saved');
-        console.log(info);
-
-        // return res.status(200).json({ message: 'Email sent successfully' });
-      }
+    // Send welcome email (async, non-blocking)
+    sendWelcomeEmail(email, name).catch(err => {
+      console.error('Error sending welcome email:', err);
     });
 
     res.status(201).json({ message: 'User registered successfully', userId });
@@ -255,107 +153,9 @@ exports.deleteUser = async (req, res) => {
     // Delete the user
     await User.findByIdAndDelete(user._id);
 
-    // create reusable transporter object using the default SMTP transport
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'ptfattendanceapp@gmail.com',
-        pass: 'vkxhfuwbaygppaim',
-      },
-    });
-
-    // setup email data with HTML body
-    const mailOptions = {
-      from: 'ptfattendanceapp@gmail.com',
-      to: email,
-      subject: 'Account Deleted',
-      html: `
-      <!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Account Deleted</title>
-  <style>
-    body {
-      background-color: #f5f5f5;
-      font-family: Arial, sans-serif;
-    }
-
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #ffffff;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .logo img {
-      max-width: 150px;
-    }
-
-    .title {
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    .content {
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 14px;
-      color: #808080;
-      margin-top: 20px;
-    }
-
-    .footer-text {
-      font-size: 12px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="logo">
-      <img src="https://i.postimg.cc/s2PRL37q/attendance-logo.png" alt="PTF Logo">   
-    </div>
-    <div class="title">PTF Attendance App - Account Deleted</div>
-    <div class="content">Goodbye <b>${name}</b>,</div>
-    <div class="content">Your account for the PTF Attendance App has been successfully deleted.</div>
-
-    <div class="footer">
-      We appreciate your time with us.
-      <div class="footer-text">© PTF - 2022 Team</div>
-    </div>
-  </div>
-</body>
-
-</html>
-    `,
-    };
-
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, async (error, info) => {
-      if (error) {
-        console.log(error);
-        console.log(info);
-        // return res.status(500).json({ error: 'Error sending email' });
-      } else {
-        // console.log('OTP saved');
-        console.log(info);
-
-        // return res.status(200).json({ message: 'Email sent successfully' });
-      }
+    // Send account deletion email (async, non-blocking)
+    sendAccountDeletionEmail(email, name).catch(err => {
+      console.error('Error sending deletion email:', err);
     });
 
 
@@ -390,22 +190,21 @@ exports.getAllUsers = async (req, res) => {
       return res.status(404).json({ message: 'No users found' });
     }
 
-    // Create an array to store the users with images
-    const usersWithImages = [];
+    // Optimize: Fetch all images in parallel using Promise.all
+    const userEmails = users.map(user => user.email);
+    const images = await Image.find({ email: { $in: userEmails } });
+    
+    // Create a map for O(1) lookup
+    const imageMap = new Map();
+    images.forEach(image => {
+      imageMap.set(image.email, image.data);
+    });
 
-    // Iterate through each user and fetch the associated image
-    for (const user of users) {
-      // Find the image for the user
-      const image = await Image.findOne({ email: user.email });
-
-      // Create a user object with the image data
-      const userWithImage = {
-        ...user.toObject(),
-        image: image ? image.data : '', // Add the image data to the user object
-      };
-
-      usersWithImages.push(userWithImage);
-    }
+    // Create users with images using the map
+    const usersWithImages = users.map(user => ({
+      ...user.toObject(),
+      image: imageMap.get(user.email) || ''
+    }));
 
     res.status(200).json(usersWithImages);
   } catch (error) {

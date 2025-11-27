@@ -34,6 +34,11 @@ const attendanceSchema = new mongoose.Schema({
   },
 });
 
+// Add indexes for better query performance
+attendanceSchema.index({ email: 1 });
+attendanceSchema.index({ 'in.date': 1 });
+attendanceSchema.index({ email: 1, 'in.date': 1 }); // Compound index for common queries
+
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 
 module.exports = Attendance;
